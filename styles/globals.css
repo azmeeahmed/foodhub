@@ -1,7 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
    GLOBALS.CSS  —  Eater-style Editorial Map Guide
-   Aesthetic: Bold editorial magazine — white background,
-   heavy black condensed type, red accent (like Eater.com)
+   Layout: 40% list / 60% map
    ═══════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600&display=swap');
@@ -15,7 +14,6 @@
   --grey-light:   #e2e2e2;
   --grey-bg:      #f7f7f7;
   --white:        #ffffff;
-  --sidebar-w:    460px;
   --header-h:     52px;
   --font-display: 'Barlow Condensed', sans-serif;
   --font-body:    'Barlow', sans-serif;
@@ -46,7 +44,7 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
 }
 
-/* ── Top navigation bar ── */
+/* ── Top nav bar ── */
 .app-header {
   display: flex;
   align-items: center;
@@ -66,7 +64,6 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   line-height: 1;
 }
-
 .header-logo span { color: var(--black); }
 
 .header-divider {
@@ -98,21 +95,24 @@ a { color: inherit; text-decoration: none; }
   border-radius: 2px;
 }
 
-/* ── Main two-column layout ── */
+/* ══════════════════════════════════════════
+   MAIN LAYOUT: 40% list | 60% map
+   ══════════════════════════════════════════ */
 .app-body {
   display: grid;
-  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-columns: 40% 60%;   /* ← 40/60 split */
   overflow: hidden;
   height: 100%;
 }
 
-/* ── Left sidebar ── */
+/* ── Left sidebar (40%) ── */
 .places-sidebar {
   display: flex;
   flex-direction: column;
   background: var(--white);
   border-right: 2px solid var(--black);
   overflow: hidden;
+  min-width: 0; /* prevent grid blowout */
 }
 
 .places-scroll {
@@ -125,10 +125,11 @@ a { color: inherit; text-decoration: none; }
 .places-scroll::-webkit-scrollbar-track { background: var(--grey-bg); }
 .places-scroll::-webkit-scrollbar-thumb { background: var(--grey-light); }
 
-/* ── Editorial hero block (top of list) ── */
+/* ── Editorial hero block ── */
 .list-hero {
-  padding: 24px 22px 20px;
+  padding: 22px 20px 18px;
   border-bottom: 2px solid var(--black);
+  flex-shrink: 0;
 }
 
 .list-hero-eyebrow {
@@ -138,12 +139,12 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   letter-spacing: .16em;
   color: var(--red);
-  margin-bottom: 7px;
+  margin-bottom: 6px;
 }
 
 .list-hero-title {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.9rem;
   font-weight: 900;
   line-height: 1.0;
   text-transform: uppercase;
@@ -180,10 +181,10 @@ a { color: inherit; text-decoration: none; }
   white-space: nowrap;
 }
 
-/* ── Individual place card (Eater numbered list) ── */
+/* ── Place card (numbered, Eater-style) ── */
 .place-item {
   display: grid;
-  grid-template-columns: 50px 1fr;
+  grid-template-columns: 44px 1fr;
   border-bottom: 1px solid var(--grey-light);
   cursor: pointer;
   transition: background var(--transition);
@@ -191,12 +192,8 @@ a { color: inherit; text-decoration: none; }
 }
 
 .place-item:hover { background: var(--grey-bg); }
+.place-item.active { background: #fff8f8; }
 
-.place-item.active {
-  background: #fff8f8;
-}
-
-/* Red left bar on active */
 .place-item.active::before {
   content: '';
   position: absolute;
@@ -205,18 +202,18 @@ a { color: inherit; text-decoration: none; }
   background: var(--red);
 }
 
-/* ── Number column ── */
+/* Number column */
 .place-number-col {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 20px;
+  padding-top: 18px;
   border-right: 1px solid var(--grey-light);
 }
 
 .place-number {
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 900;
   color: var(--grey-light);
   line-height: 1;
@@ -227,14 +224,14 @@ a { color: inherit; text-decoration: none; }
 .place-item.active .place-number { color: var(--red); }
 .place-item:hover .place-number  { color: var(--grey-dark); }
 
-/* ── Content column ── */
+/* Content column */
 .place-content {
-  padding: 16px 16px 16px 14px;
+  padding: 14px 14px 14px 12px;
 }
 
 .place-name {
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: .01em;
@@ -247,34 +244,34 @@ a { color: inherit; text-decoration: none; }
 .place-item.active .place-name { color: var(--red); }
 
 .place-description {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--grey-dark);
-  line-height: 1.6;
-  margin-bottom: 10px;
+  line-height: 1.55;
+  margin-bottom: 9px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Address row with "Map it" link */
+/* Address + "Map it" */
 .place-address-row {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   flex-wrap: wrap;
 }
 
 .place-address {
-  font-size: 0.73rem;
+  font-size: 0.72rem;
   color: var(--grey-mid);
   font-family: var(--font-semi);
   font-weight: 600;
 }
 
 .map-it-link {
-  font-size: 0.67rem;
+  font-size: 0.65rem;
   font-family: var(--font-display);
   font-weight: 700;
   text-transform: uppercase;
@@ -288,11 +285,11 @@ a { color: inherit; text-decoration: none; }
 
 /* Phone */
 .place-phone {
-  font-size: 0.73rem;
+  font-size: 0.72rem;
   color: var(--grey-mid);
   font-family: var(--font-semi);
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
   display: block;
 }
 
@@ -301,38 +298,28 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   gap: 5px;
   flex-wrap: wrap;
-  margin-top: 6px;
+  margin-top: 5px;
 }
 
 .link-pill {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-family: var(--font-display);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .12em;
-  padding: 3px 8px 2px;
+  padding: 3px 7px 2px;
   border: 1.5px solid var(--black);
   color: var(--black);
   border-radius: 2px;
   transition: all var(--transition);
 }
+.link-pill:hover { background: var(--black); color: var(--white); }
 
-.link-pill:hover {
-  background: var(--black);
-  color: var(--white);
-}
-
-.link-pill.instagram {
-  border-color: #c13584;
-  color: #c13584;
-}
-.link-pill.instagram:hover {
-  background: #c13584;
-  color: var(--white);
-}
+.link-pill.instagram { border-color: #c13584; color: #c13584; }
+.link-pill.instagram:hover { background: #c13584; color: var(--white); }
 
 /* Instagram embed */
 .instagram-embed {
@@ -340,17 +327,14 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--grey-light);
   overflow: hidden;
 }
-.instagram-embed iframe {
-  width: 100%;
-  border: none;
-  display: block;
-}
+.instagram-embed iframe { width: 100%; border: none; display: block; }
 
-/* ── Map panel ── */
+/* ── Map panel (60%) ── */
 .map-panel {
   position: relative;
   height: 100%;
   overflow: hidden;
+  min-width: 0;
 }
 
 /* Floating active-place label */
@@ -408,10 +392,9 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: var(--black);
 }
-
 .state-screen p { font-size: 0.8rem; }
 
-/* ── Responsive (mobile stack) ── */
+/* ── Responsive: stack on mobile ── */
 @media (max-width: 800px) {
   .app-body {
     grid-template-columns: 1fr;
@@ -423,15 +406,12 @@ a { color: inherit; text-decoration: none; }
     border-top: 2px solid var(--black);
   }
   .map-panel { order: 1; }
-  :root { --sidebar-w: 100%; }
   .header-badge { display: none; }
 }
 
-/* ── Staggered entrance animation ── */
+/* ── Entrance animation ── */
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateX(-6px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-.place-item {
-  animation: fadeSlideIn 0.22s ease both;
-}
+.place-item { animation: fadeSlideIn 0.22s ease both; }

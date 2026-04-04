@@ -1,18 +1,19 @@
 'use client';
 
 /**
- * MapView.js
- * ──────────
- * Google Map with numbered markers matching the sidebar list.
- * Active marker = red filled; inactive = dark/outlined.
+ * MapView.js — FIXED
+ * ──────────────────
+ * Fixes:
+ *  1. Numbered SVG markers now use proper google.maps.Size + google.maps.Point
+ *  2. Markers created only after map is fully loaded (onLoad callback)
+ *  3. activePlaceId changes reliably pan + swap marker icons
  */
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 
-const MAP_STYLE = { width: '100%', height: '100%' };
+const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 
-// Clean, minimal map style matching the editorial aesthetic
 const MAP_OPTIONS = {
   disableDefaultUI: false,
   zoomControl: true,
@@ -21,67 +22,89 @@ const MAP_OPTIONS = {
   fullscreenControl: true,
   gestureHandling: 'greedy',
   styles: [
-    { elementType: 'geometry', stylers: [{ color: '#f5f5f0' }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f5f0' }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: '#333333' }] },
-    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+    { elementType: 'geometry',            stylers: [{ color: '#f5f5f0' }] },
+    { elementType: 'labels.text.stroke',  stylers: [{ color: '#f5f5f0' }] },
+    { elementType: 'labels.text.fill',    stylers: [{ color: '#333333' }] },
+    { featureType: 'road', elementType: 'geometry',             stylers: [{ color: '#ffffff' }] },
     { featureType: 'road.arterial', elementType: 'labels.text.fill', stylers: [{ color: '#666666' }] },
-    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#e8e8e8' }] },
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#c9d8e8' }] },
-    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#dae8d0' }] },
-    { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-    { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#111111' }] },
+    { featureType: 'road.highway', elementType: 'geometry',     stylers: [{ color: '#e8e8e8' }] },
+    { featureType: 'water', elementType: 'geometry',            stylers: [{ color: '#c9d8e8' }] },
+    { featureType: 'poi.park', elementType: 'geometry',         stylers: [{ color: '#dae8d0' }] },
+    { featureType: 'poi',     elementType: 'labels',            stylers: [{ visibility: 'off' }] },
+    { featureType: 'transit',                                   stylers: [{ visibility: 'off' }] },
   ],
 };
 
 /**
- * Creates a circular numbered marker as a data URL.
- * Active → red background; inactive → dark grey.
+ * Builds the SVG data-URL icon AND returns proper Google Maps Size/Point objects.
+ * Must be called AFTER the Maps API is loaded so google.maps.Size exists.
  */
 function makeMarkerIcon(number, isActive) {
-  const size = isActive ? 36 : 30;
-  const bg = isActive ? '#e8001c' : '#333333';
-  const fontSize = number > 9 ? (isActive ? 13 : 11) : (isActive ? 15 : 13);
+  const w = isActive ? 38 : 30;
+  const h = isActive ? 50 : 40;   // taller to include the pin tail
+  const cy = isActive ? 17 : 13;  // circle centre y
+  const cr = isActive ? 16 : 12;  // circle radius
+  const fontSize = number > 9 ? cr * 0.9 : cr * 1.1;
+  const bg = isActive ? '#e8001c' : '#222222';
+  const stroke = '#ffffff';
 
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size + 8}" viewBox="0 0 ${size} ${size + 8}">
-      <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 1}" fill="${bg}" stroke="white" stroke-width="2"/>
-      <text x="${size / 2}" y="${size / 2 + fontSize * 0.38}" 
-            text-anchor="middle" fill="white" 
-            font-family="'Barlow Condensed', sans-serif" 
-            font-weight="900" font-size="${fontSize}px">${number}</text>
-      <polygon points="${size / 2 - 5},${size - 2} ${size / 2 + 5},${size - 2} ${size / 2},${size + 7}" fill="${bg}"/>
-    </svg>`;
+  // Pin shape: circle on top + triangle tail pointing down
+  const tailTop = cy + cr;           // where triangle starts
+  const tailTip = h - 2;            // tip of the pin
+  const tailHalf = isActive ? 6 : 5;
+
+  const svg = [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`,
+    // Drop shadow
+    `<ellipse cx="${w / 2}" cy="${tailTip + 1}" rx="${tailHalf + 1}" ry="2" fill="rgba(0,0,0,0.25)"/>`,
+    // Circle body
+    `<circle cx="${w / 2}" cy="${cy}" r="${cr}" fill="${bg}" stroke="${stroke}" stroke-width="2"/>`,
+    // Triangle tail
+    `<polygon points="${w / 2 - tailHalf},${tailTop} ${w / 2 + tailHalf},${tailTop} ${w / 2},${tailTip}" fill="${bg}"/>`,
+    // Number text
+    `<text x="${w / 2}" y="${cy + fontSize * 0.37}"`,
+    `  text-anchor="middle" fill="${stroke}"`,
+    `  font-family="Arial,sans-serif" font-weight="900"`,
+    `  font-size="${fontSize}px">${number}</text>`,
+    `</svg>`,
+  ].join('');
+
+  const url = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 
   return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
-    scaledSize: { width: size, height: size + 8 },
-    anchor: { x: size / 2, y: size + 8 },
+    url,
+    // These MUST be google.maps.Size / google.maps.Point instances
+    scaledSize: new window.google.maps.Size(w, h),
+    anchor:     new window.google.maps.Point(w / 2, h),  // tip of the pin
   };
 }
 
 export default function MapView({ places, activePlaceId, center, onMarkerClick }) {
-  const mapRef = useRef(null);
-  const markersRef = useRef({});
-  const activeIdRef = useRef(activePlaceId);
+  const mapRef      = useRef(null);   // google.maps.Map instance
+  const markersRef  = useRef({});     // { placeId: google.maps.Marker }
+  const prevActiveRef = useRef(null); // track previous active to reset its icon
+
+  // Track whether map is ready so marker effects can re-run
+  const [mapReady, setMapReady] = useState(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     id: 'google-map-script',
   });
 
+  // ── Called by GoogleMap once the map instance exists ────────────────────
   const handleMapLoad = useCallback((map) => {
     mapRef.current = map;
+    setMapReady(true); // triggers marker creation effect below
   }, []);
 
-  // ── Create/update markers when places load ──────────────────────────────
+  // ── Create markers once map is ready AND places are loaded ──────────────
   useEffect(() => {
-    if (!isLoaded || !mapRef.current || !places.length) return;
+    if (!mapReady || !mapRef.current || !places.length) return;
 
     const { Marker } = window.google.maps;
 
-    // Clean up removed places
+    // Remove stale markers
     Object.keys(markersRef.current).forEach((id) => {
       if (!places.find((p) => p.id === id)) {
         markersRef.current[id].setMap(null);
@@ -89,60 +112,69 @@ export default function MapView({ places, activePlaceId, center, onMarkerClick }
       }
     });
 
-    // Add/update markers
+    // Create or update each marker
     places.forEach((place, index) => {
-      const position = { lat: place.latitude, lng: place.longitude };
-      const isActive = place.id === activeIdRef.current;
-      const number = index + 1;
+      const position  = { lat: place.latitude, lng: place.longitude };
+      const isActive  = place.id === activePlaceId;
+      const number    = index + 1;
 
       if (markersRef.current[place.id]) {
+        // Update existing
         markersRef.current[place.id].setPosition(position);
         markersRef.current[place.id].setIcon(makeMarkerIcon(number, isActive));
+        markersRef.current[place.id].setZIndex(isActive ? 1000 : number);
       } else {
+        // Create new
         const marker = new Marker({
-          map: mapRef.current,
+          map:      mapRef.current,
           position,
-          title: place.name,
-          icon: makeMarkerIcon(number, isActive),
-          zIndex: isActive ? 100 : index,
+          title:    place.name,
+          icon:     makeMarkerIcon(number, isActive),
+          zIndex:   isActive ? 1000 : number,
         });
         marker.addListener('click', () => onMarkerClick(place));
         markersRef.current[place.id] = marker;
       }
     });
-  }, [isLoaded, places, onMarkerClick]);
 
-  // ── Sync active marker + pan when activePlaceId changes ────────────────
+    prevActiveRef.current = activePlaceId;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapReady, places]);  // only re-run when map becomes ready or places change
+
+  // ── Sync active marker icon + pan whenever activePlaceId changes ─────────
   useEffect(() => {
-    if (!isLoaded || !mapRef.current) return;
+    if (!mapReady || !mapRef.current || !places.length) return;
 
-    const prevId = activeIdRef.current;
-    activeIdRef.current = activePlaceId;
+    const prevId = prevActiveRef.current;
+    prevActiveRef.current = activePlaceId;
 
-    // Reset previous marker
-    if (prevId && markersRef.current[prevId]) {
+    // Restore previous active marker to normal
+    if (prevId && prevId !== activePlaceId && markersRef.current[prevId]) {
       const prevIndex = places.findIndex((p) => p.id === prevId);
-      markersRef.current[prevId].setIcon(makeMarkerIcon(prevIndex + 1, false));
-      markersRef.current[prevId].setZIndex(prevIndex);
+      if (prevIndex !== -1) {
+        markersRef.current[prevId].setIcon(makeMarkerIcon(prevIndex + 1, false));
+        markersRef.current[prevId].setZIndex(prevIndex + 1);
+      }
     }
 
-    // Activate new marker
+    // Highlight new active marker + pan
     if (activePlaceId && markersRef.current[activePlaceId]) {
       const index = places.findIndex((p) => p.id === activePlaceId);
-      markersRef.current[activePlaceId].setIcon(makeMarkerIcon(index + 1, true));
-      markersRef.current[activePlaceId].setZIndex(1000);
-
-      const pos = markersRef.current[activePlaceId].getPosition();
-      if (pos) mapRef.current.panTo(pos);
+      if (index !== -1) {
+        markersRef.current[activePlaceId].setIcon(makeMarkerIcon(index + 1, true));
+        markersRef.current[activePlaceId].setZIndex(1000);
+        const pos = markersRef.current[activePlaceId].getPosition();
+        if (pos) mapRef.current.panTo(pos);
+      }
     }
-  }, [isLoaded, activePlaceId, places]);
+  }, [mapReady, activePlaceId, places]);
 
-  // ── Error state ─────────────────────────────────────────────────────────
+  // ── Error / loading ──────────────────────────────────────────────────────
   if (loadError) {
     return (
       <div className="state-screen">
         <h3>Map failed to load</h3>
-        <p>Check your <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> in <code>.env.local</code>.</p>
+        <p>Check <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> in <code>.env.local</code>.</p>
       </div>
     );
   }
@@ -158,9 +190,9 @@ export default function MapView({ places, activePlaceId, center, onMarkerClick }
 
   return (
     <GoogleMap
-      mapContainerStyle={MAP_STYLE}
+      mapContainerStyle={MAP_CONTAINER_STYLE}
       center={center}
-      zoom={13}
+      zoom={14}
       options={MAP_OPTIONS}
       onLoad={handleMapLoad}
     />
