@@ -1,13 +1,14 @@
 import { notFound } from 'next/navigation';
-import { getListingBySlug, LISTINGS } from '../lib/listings';
-import ListingPage from '../components/ListingPage';
+import { getListingBySlug, LISTINGS } from '../../lib/listings';
+import ListingPage from '../../components/ListingPage';
 
 export function generateStaticParams() {
   return LISTINGS.map((l) => ({ slug: l.slug }));
 }
 
 export async function generateMetadata({ params }) {
-  const listing = getListingBySlug(params.slug);
+  const { slug } = await params;
+  const listing = getListingBySlug(slug);
   if (!listing) return {};
   return {
     title:       `${listing.title} | FoodHub`,
@@ -15,8 +16,9 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function Page({ params }) {
-  const listing = getListingBySlug(params.slug);
+export default async function Page({ params }) {
+  const { slug } = await params;
+  const listing = getListingBySlug(slug);
   if (!listing) notFound();
   return <ListingPage listing={listing} />;
 }

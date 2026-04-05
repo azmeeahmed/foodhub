@@ -22,7 +22,7 @@ A live, interactive map app that reads **all data from a Google Sheet** — no h
 /styles
   globals.css      ← Full design system
 
-.env.local.example ← Rename to .env.local and fill in your keys
+.env.local ← Rename to .env.local and fill in your keys
 ```
 
 ---

@@ -1,8 +1,8 @@
 import '../styles/globals.css';
 
 export const metadata = {
-  title: 'Places Explorer',
-  description: 'Discover places with an interactive map synchronized to a live Google Sheet.',
+  title:       'FoodHub Maps',
+  description: 'Curated local guides with interactive maps.',
 };
 
 export default function RootLayout({ children }) {

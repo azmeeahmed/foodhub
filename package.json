@@ -1,6 +1,6 @@
 {
   "name": "foodhub",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,10 +8,10 @@
     "start": "next start"
   },
   "dependencies": {
-    "@react-google-maps/api": "^2.19.3",
-    "next": "^16.2.2",
-    "papaparse": "^5.4.1",
+    "next": "latest",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "@react-google-maps/api": "^2.19.3",
+    "papaparse": "^5.4.1"
   }
 }
