@@ -354,23 +354,22 @@ button { cursor: pointer; border: none; background: none; padding: 0; }
 }
 .link-pill:hover { background: var(--black); color: var(--white); }
 
-/* Instagram embed wrapper */
+/* Instagram official embed wrapper */
 .instagram-embed {
   margin-top: 12px;
-  border: 1px solid var(--grey-100);
   border-radius: 4px;
   overflow: hidden;
-  /* Make iframes responsive */
+  /* Let Instagram control the width */
 }
-.instagram-embed iframe {
+.instagram-embed .instagram-media {
+  min-width: 0 !important;
   width: 100% !important;
-  border: none;
-  display: block;
-  max-width: 100%;
-}
-/* Behold / Elfsight widgets */
-.instagram-embed > * {
   max-width: 100% !important;
+  margin: 0 !important;
+}
+/* Hide the gray placeholder before script loads */
+.instagram-embed blockquote {
+  min-height: 0;
 }
 
 /* ── Map panel (60%) ── */

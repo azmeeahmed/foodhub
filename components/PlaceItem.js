@@ -6,11 +6,12 @@
  * Individual place card — clean, no number column.
  *
  * Instagram:
- *   Renders whatever HTML is in `place.instagram_embed_code`.
- *   The client pastes an <iframe> or <script> snippet from
- *   Behold.so / Elfsight / SnapWidget into the Google Sheet cell.
- *   We render it inside a sandboxed wrapper.
+ *   Client pastes a post URL in the `instagram_url` sheet column.
+ *   e.g. https://www.instagram.com/p/DUTp1j5kr0r/
+ *   InstagramEmbed handles the official embed.js rendering.
  */
+
+import InstagramEmbed from './InstagramEmbed';
 
 export default function PlaceItem({ place, index, isActive, onClick }) {
   const mapsUrl = place.address
@@ -87,17 +88,11 @@ export default function PlaceItem({ place, index, isActive, onClick }) {
       )}
 
       {/* ── Instagram embed ──
-           The client pastes a full <iframe> snippet from their embed
-           service (Behold, Elfsight, SnapWidget, or a single post embed).
-           We render it inside a click-isolated wrapper. ── */}
-      {place.instagram_embed_code && (
-        <div
-          className="instagram-embed"
-          onClick={(e) => e.stopPropagation()}
-          /* dangerouslySetInnerHTML is safe here because the content
-             comes from your own Google Sheet, not from end users */
-          dangerouslySetInnerHTML={{ __html: place.instagram_embed_code }}
-        />
+           Client pastes a post URL in the sheet, e.g:
+           https://www.instagram.com/p/DUTp1j5kr0r/
+           InstagramEmbed uses the official embed.js to render it. ── */}
+      {place.instagram_url && (
+        <InstagramEmbed url={place.instagram_url} />
       )}
     </div>
   );
